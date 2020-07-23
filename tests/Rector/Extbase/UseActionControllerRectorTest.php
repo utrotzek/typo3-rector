@@ -1,5 +1,7 @@
 <?php
 
+declare(strict_types=1);
+
 namespace Ssch\TYPO3Rector\Tests\Rector\Extbase;
 
 use Iterator;
@@ -9,8 +11,6 @@ final class UseActionControllerRectorTest extends AbstractRectorWithConfigTestCa
 {
     /**
      * @dataProvider provideDataForTest()
-     *
-     * @param string $file
      */
     public function test(string $file): void
     {

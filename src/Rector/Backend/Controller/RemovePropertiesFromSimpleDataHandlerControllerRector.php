@@ -8,10 +8,10 @@ use PhpParser\Node;
 use PhpParser\Node\Expr\Assign;
 use PhpParser\Node\Expr\PropertyFetch;
 use PhpParser\Node\Expr\Variable;
+use Rector\Core\Rector\AbstractRector;
+use Rector\Core\RectorDefinition\CodeSample;
+use Rector\Core\RectorDefinition\RectorDefinition;
 use Rector\NodeTypeResolver\Node\AttributeKey;
-use Rector\Rector\AbstractRector;
-use Rector\RectorDefinition\CodeSample;
-use Rector\RectorDefinition\RectorDefinition;
 use TYPO3\CMS\Backend\Controller\SimpleDataHandlerController;
 
 /**
@@ -20,7 +20,7 @@ use TYPO3\CMS\Backend\Controller\SimpleDataHandlerController;
 final class RemovePropertiesFromSimpleDataHandlerControllerRector extends AbstractRector
 {
     /**
-     * @inheritDoc
+     * @return string[]
      */
     public function getNodeTypes(): array
     {
@@ -32,15 +32,17 @@ final class RemovePropertiesFromSimpleDataHandlerControllerRector extends Abstra
      */
     public function refactor(Node $node): ?Node
     {
-        if (!$node->var instanceof Variable && !$node->var instanceof PropertyFetch) {
+        if ($node->var instanceof Variable) {
+            $this->removeVariableNode($node);
+
             return null;
         }
 
-        if ($node->var instanceof Variable) {
-            return $this->removeVariableNode($node);
+        if ($node->var instanceof PropertyFetch) {
+            $this->removePropertyFetchNode($node);
         }
 
-        return $this->removePropertyFetchNode($node);
+        return null;
     }
 
     /**
@@ -48,9 +50,11 @@ final class RemovePropertiesFromSimpleDataHandlerControllerRector extends Abstra
      */
     public function getDefinition(): RectorDefinition
     {
-        return new RectorDefinition('Remove assignments or accessing of properties prErr and uPT from class SimpleDataHandlerController', [
-            new CodeSample(
-                <<<'PHP'
+        return new RectorDefinition(
+            'Remove assignments or accessing of properties prErr and uPT from class SimpleDataHandlerController',
+            [
+                new CodeSample(
+                    <<<'PHP'
 final class MySimpleDataHandlerController extends SimpleDataHandlerController
 {
     public function myMethod()
@@ -61,8 +65,8 @@ final class MySimpleDataHandlerController extends SimpleDataHandlerController
     }
 }
 PHP
-                ,
-                <<<'PHP'
+                    ,
+                    <<<'PHP'
 final class MySimpleDataHandlerController extends SimpleDataHandlerController
 {
     public function myMethod()
@@ -70,49 +74,46 @@ final class MySimpleDataHandlerController extends SimpleDataHandlerController
     }
 }
 PHP
-            ),
-        ]);
+                ),
+            ]
+        );
     }
 
-    private function removeVariableNode(Assign $node)
+    private function removeVariableNode(Assign $assign): void
     {
-        $classNode = $node->expr->getAttribute(AttributeKey::CLASS_NODE);
+        $classNode = $assign->expr->getAttribute(AttributeKey::CLASS_NODE);
 
         if (null === $classNode) {
-            return null;
+            return;
         }
 
-        if (!$this->isObjectType($classNode, SimpleDataHandlerController::class)) {
-            return null;
+        if (! $this->isObjectType($classNode, SimpleDataHandlerController::class)) {
+            return;
         }
 
-        if (!$this->isName($node->expr, 'uPT') && !$this->isName($node->expr, 'prErr')) {
-            return null;
+        if (! $this->isName($assign->expr, 'uPT') && ! $this->isName($assign->expr, 'prErr')) {
+            return;
         }
 
-        $this->removeNode($node);
-
-        return null;
+        $this->removeNode($assign);
     }
 
-    private function removePropertyFetchNode(Assign $node)
+    private function removePropertyFetchNode(Assign $assign): void
     {
-        $classNode = $node->getAttribute(AttributeKey::CLASS_NODE);
+        $classNode = $assign->getAttribute(AttributeKey::CLASS_NODE);
 
         if (null === $classNode) {
-            return null;
+            return;
         }
 
-        if (!$this->isObjectType($classNode, SimpleDataHandlerController::class)) {
-            return null;
+        if (! $this->isObjectType($classNode, SimpleDataHandlerController::class)) {
+            return;
         }
 
-        if (!$this->isName($node->var, 'uPT') && !$this->isName($node->var, 'prErr')) {
-            return null;
+        if (! $this->isName($assign->var, 'uPT') && ! $this->isName($assign->var, 'prErr')) {
+            return;
         }
 
-        $this->removeNode($node);
-
-        return null;
+        $this->removeNode($assign);
     }
 }

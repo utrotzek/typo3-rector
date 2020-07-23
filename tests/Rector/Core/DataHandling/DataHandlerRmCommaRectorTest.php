@@ -1,16 +1,16 @@
 <?php
 
+declare(strict_types=1);
+
 namespace Ssch\TYPO3Rector\Tests\Rector\Core\DataHandling;
 
 use Iterator;
 use Ssch\TYPO3Rector\Tests\AbstractRectorWithConfigTestCase;
 
-class DataHandlerRmCommaRectorTest extends AbstractRectorWithConfigTestCase
+final class DataHandlerRmCommaRectorTest extends AbstractRectorWithConfigTestCase
 {
     /**
      * @dataProvider provideDataForTest()
-     *
-     * @param string $file
      */
     public function test(string $file): void
     {
@@ -19,6 +19,6 @@ class DataHandlerRmCommaRectorTest extends AbstractRectorWithConfigTestCase
 
     public function provideDataForTest(): Iterator
     {
-        yield [__DIR__ . '/Fixture/data_handler_rm_comma.php.inc'];
+        return $this->yieldFilesFromDirectory(__DIR__ . '/Fixture');
     }
 }

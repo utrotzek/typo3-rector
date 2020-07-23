@@ -13,10 +13,10 @@ use PhpParser\Node\Stmt\Class_;
 use PhpParser\Node\Stmt\Nop;
 use PhpParser\Node\Stmt\Property;
 use PHPStan\Type\ObjectType;
-use Rector\PhpParser\Node\Manipulator\ClassManipulator;
-use Rector\Rector\AbstractRector;
-use Rector\RectorDefinition\CodeSample;
-use Rector\RectorDefinition\RectorDefinition;
+use Rector\Core\PhpParser\Node\Manipulator\ClassInsertManipulator;
+use Rector\Core\Rector\AbstractRector;
+use Rector\Core\RectorDefinition\CodeSample;
+use Rector\Core\RectorDefinition\RectorDefinition;
 use TYPO3\CMS\Extbase\Mvc\Web\Response;
 use TYPO3\CMS\Extbase\Service\EnvironmentService;
 
@@ -26,17 +26,17 @@ use TYPO3\CMS\Extbase\Service\EnvironmentService;
 final class InjectEnvironmentServiceIfNeededInResponseRector extends AbstractRector
 {
     /**
-     * @var ClassManipulator
+     * @var ClassInsertManipulator
      */
-    private $classManipulator;
+    private $classInsertManipulator;
 
-    public function __construct(ClassManipulator $class)
+    public function __construct(ClassInsertManipulator $classInsertManipulator)
     {
-        $this->classManipulator = $class;
+        $this->classInsertManipulator = $classInsertManipulator;
     }
 
     /**
-     * @inheritDoc
+     * @return string[]
      */
     public function getNodeTypes(): array
     {
@@ -44,21 +44,22 @@ final class InjectEnvironmentServiceIfNeededInResponseRector extends AbstractRec
     }
 
     /**
-     * @param Node|Class_ $node
+     * @param Class_ $node
      */
     public function refactor(Node $node): ?Node
     {
-        if (!$this->isObjectType($node, Response::class)) {
+        if (! $this->isObjectType($node, Response::class)) {
             return null;
         }
 
-        if (!$this->isPropertyEnvironmentServiceInUse($node)) {
+        if (! $this->isPropertyEnvironmentServiceInUse($node)) {
             return null;
         }
 
         $this->addInjectEnvironmentServiceMethod($node);
-        $this->classManipulator->addAsFirstMethod($node, $this->createEnvironmentServiceProperty());
-        $this->classManipulator->addAsFirstMethod($node, new Nop());
+
+        $this->classInsertManipulator->addAsFirstMethod($node, $this->createEnvironmentServiceProperty());
+        $this->classInsertManipulator->addAsFirstMethod($node, new Nop());
 
         return $node;
     }
@@ -137,8 +138,10 @@ CODE_SAMPLE
     private function isPropertyEnvironmentServiceInUse(Class_ $node): bool
     {
         $isEnvironmentServicePropertyUsed = false;
-        $this->traverseNodesWithCallable($node->stmts, function (Node $node) use (&$isEnvironmentServicePropertyUsed): ?PropertyFetch {
-            if (!$node instanceof PropertyFetch) {
+        $this->traverseNodesWithCallable($node->stmts, function (Node $node) use (
+            &$isEnvironmentServicePropertyUsed
+        ): ?PropertyFetch {
+            if (! $node instanceof PropertyFetch) {
                 return null;
             }
 
@@ -156,9 +159,13 @@ CODE_SAMPLE
     {
         $paramBuilder = $this->builderFactory->param('environmentService');
         $paramBuilder->setType(new FullyQualified(EnvironmentService::class));
+
         $param = $paramBuilder->getNode();
 
-        $propertyAssignNode = $this->nodeFactory->createPropertyAssignmentWithExpr('environmentService', new Variable('environmentService'));
+        $propertyAssignNode = $this->nodeFactory->createPropertyAssignmentWithExpr(
+            'environmentService',
+            new Variable('environmentService')
+        );
         $classMethodBuilder = $this->builderFactory->method('injectEnvironmentService');
         $classMethodBuilder->addParam($param);
         $classMethodBuilder->addStmt($propertyAssignNode);

@@ -6,9 +6,9 @@ namespace Ssch\TYPO3Rector\Rector\Core\Package;
 
 use PhpParser\Node;
 use PhpParser\Node\Expr\ArrayDimFetch;
-use Rector\Rector\AbstractRector;
-use Rector\RectorDefinition\CodeSample;
-use Rector\RectorDefinition\RectorDefinition;
+use Rector\Core\Rector\AbstractRector;
+use Rector\Core\RectorDefinition\CodeSample;
+use Rector\Core\RectorDefinition\RectorDefinition;
 use Ssch\TYPO3Rector\Helper\Typo3NodeResolver;
 use TYPO3\CMS\Core\Package\PackageManager;
 use TYPO3\CMS\Core\Utility\GeneralUtility;
@@ -29,7 +29,7 @@ final class UsePackageManagerActivePackagesRector extends AbstractRector
     }
 
     /**
-     * @inheritDoc
+     * @return string[]
      */
     public function getNodeTypes(): array
     {
@@ -37,7 +37,7 @@ final class UsePackageManagerActivePackagesRector extends AbstractRector
     }
 
     /**
-     * @inheritDoc
+     * @param ArrayDimFetch $node
      */
     public function refactor(Node $node): ?Node
     {
@@ -45,9 +45,7 @@ final class UsePackageManagerActivePackagesRector extends AbstractRector
             return $this->createMethodCall($this->createStaticCall(
                 GeneralUtility::class,
                 'makeInstance',
-                [
-                    $this->createClassConstant(PackageManager::class, 'class'),
-                ]
+                [$this->createClassConstant(PackageManager::class, 'class')]
             ), 'getActivePackages');
         }
 

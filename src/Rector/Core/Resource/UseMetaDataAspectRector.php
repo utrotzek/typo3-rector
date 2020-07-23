@@ -6,9 +6,9 @@ namespace Ssch\TYPO3Rector\Rector\Core\Resource;
 
 use PhpParser\Node;
 use PhpParser\Node\Expr\MethodCall;
-use Rector\Rector\AbstractRector;
-use Rector\RectorDefinition\CodeSample;
-use Rector\RectorDefinition\RectorDefinition;
+use Rector\Core\Rector\AbstractRector;
+use Rector\Core\RectorDefinition\CodeSample;
+use Rector\Core\RectorDefinition\RectorDefinition;
 use TYPO3\CMS\Core\Resource\File;
 
 /**
@@ -17,7 +17,7 @@ use TYPO3\CMS\Core\Resource\File;
 final class UseMetaDataAspectRector extends AbstractRector
 {
     /**
-     * @inheritDoc
+     * @return string[]
      */
     public function getNodeTypes(): array
     {
@@ -25,15 +25,15 @@ final class UseMetaDataAspectRector extends AbstractRector
     }
 
     /**
-     * @param Node|MethodCall $node
+     * @param MethodCall $node
      */
     public function refactor(Node $node): ?Node
     {
-        if (!$this->isMethodStaticCallOrClassMethodObjectType($node, File::class)) {
+        if (! $this->isMethodStaticCallOrClassMethodObjectType($node, File::class)) {
             return null;
         }
 
-        if (!$this->isName($node->name, '_getMetaData')) {
+        if (! $this->isName($node->name, '_getMetaData')) {
             return null;
         }
 

@@ -8,53 +8,123 @@ use PhpParser\Node;
 use PhpParser\Node\Expr\ArrayDimFetch;
 use PhpParser\Node\Expr\MethodCall;
 use PhpParser\Node\Expr\PropertyFetch;
-use PhpParser\Node\Stmt\Expression;
-use Rector\Rector\AbstractRector\NameResolverTrait;
-use Rector\Rector\AbstractRector\ValueResolverTrait;
+use Rector\Core\Rector\AbstractRector\NameResolverTrait;
+use Rector\Core\Rector\AbstractRector\ValueResolverTrait;
 
 final class Typo3NodeResolver
 {
     use NameResolverTrait;
     use ValueResolverTrait;
 
-    public const TypoScriptFrontendController = 'TSFE';
-    public const TimeTracker = 'TT';
-    public const ParsetimeStart = 'PARSETIME_START';
+    /**
+     * @var string
+     */
+    public const TYPO_SCRIPT_FRONTEND_CONTROLLER = 'TSFE';
 
+    /**
+     * @var string
+     */
+    public const TIME_TRACKER = 'TT';
+
+    /**
+     * @var string
+     */
+    public const PARSETIME_START = 'PARSETIME_START';
+
+    /**
+     * @var string
+     */
     public const TYPO3_LOADED_EXT = 'TYPO3_LOADED_EXT';
 
     public function isMethodCallOnGlobals(Node $node, string $methodCall, string $global): bool
     {
-        return $node instanceof MethodCall &&
-               $node->var instanceof ArrayDimFetch &&
-               $this->isName($node->name, $methodCall) &&
-               $this->isName($node->var->var, 'GLOBALS') &&
-               $this->isValue($node->var->dim, $global);
+        if (! $node instanceof MethodCall) {
+            return false;
+        }
+
+        if (! $node->var instanceof ArrayDimFetch) {
+            return false;
+        }
+
+        if (! $this->isName($node->name, $methodCall)) {
+            return false;
+        }
+
+        if (! $this->isName($node->var->var, 'GLOBALS')) {
+            return false;
+        }
+
+        if (null === $node->var->dim) {
+            return false;
+        }
+
+        return $this->isValue($node->var->dim, $global);
     }
 
     public function isAnyMethodCallOnGlobals(Node $node, string $global): bool
     {
-        return $node instanceof Expression &&
-               $node->expr instanceof MethodCall &&
-               $node->expr->var instanceof ArrayDimFetch &&
-               $this->isName($node->expr->var->var, 'GLOBALS') &&
-               $this->isValue($node->expr->var->dim, $global);
+        if (! $node instanceof MethodCall) {
+            return false;
+        }
+
+        if (! $node->var instanceof ArrayDimFetch) {
+            return false;
+        }
+
+        if (! $this->isName($node->var->var, 'GLOBALS')) {
+            return false;
+        }
+
+        if (null === $node->var->dim) {
+            return false;
+        }
+
+        return $this->isValue($node->var->dim, $global);
     }
 
     public function isTypo3Global(Node $node, string $global): bool
     {
-        return $node instanceof ArrayDimFetch &&
-               $this->isName($node->var, 'GLOBALS') &&
-               $this->isValue($node->dim, $global);
+        if (! $node instanceof ArrayDimFetch) {
+            return false;
+        }
+
+        if (! $this->isName($node->var, 'GLOBALS')) {
+            return false;
+        }
+
+        if (null === $node->dim) {
+            return false;
+        }
+
+        return $this->isValue($node->dim, $global);
     }
 
     public function isMethodCallOnPropertyOfGlobals(Node $node, string $global, string $property): bool
     {
-        return $node instanceof MethodCall &&
-               $node->var instanceof PropertyFetch &&
-               $node->var->var instanceof ArrayDimFetch &&
-               $this->isName($node->var->var->var, 'GLOBALS') &&
-               $this->isName($node->var->name, $property) &&
-               $this->isValue($node->var->var->dim, $global);
+        if (! $node instanceof MethodCall) {
+            return false;
+        }
+
+        if (! $node->var instanceof PropertyFetch) {
+            return false;
+        }
+
+        if (! $node->var->var instanceof ArrayDimFetch) {
+            return false;
+        }
+
+        if (! $this->isName($node->var->var->var, 'GLOBALS')) {
+            return false;
+        }
+
+        if (! $this->isName($node->var->name, $property)) {
+            return false;
+        }
+
+        if (null === $node->var->var->dim) {
+            return false;
+        }
+
+        return $this->isValue($node->var->var->dim, $global);
     }
 }

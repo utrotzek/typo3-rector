@@ -7,9 +7,9 @@ namespace Ssch\TYPO3Rector\Rector\SysNote\Domain\Repository;
 use PhpParser\Node;
 use PhpParser\Node\Expr\MethodCall;
 use PhpParser\Node\Identifier;
-use Rector\Rector\AbstractRector;
-use Rector\RectorDefinition\CodeSample;
-use Rector\RectorDefinition\RectorDefinition;
+use Rector\Core\Rector\AbstractRector;
+use Rector\Core\RectorDefinition\CodeSample;
+use Rector\Core\RectorDefinition\RectorDefinition;
 use TYPO3\CMS\SysNote\Domain\Repository\SysNoteRepository;
 
 /**
@@ -18,7 +18,7 @@ use TYPO3\CMS\SysNote\Domain\Repository\SysNoteRepository;
 final class FindByPidsAndAuthorIdRector extends AbstractRector
 {
     /**
-     * @inheritDoc
+     * @return string[]
      */
     public function getNodeTypes(): array
     {
@@ -30,19 +30,22 @@ final class FindByPidsAndAuthorIdRector extends AbstractRector
      */
     public function refactor(Node $node): ?Node
     {
-        if (!$this->isMethodStaticCallOrClassMethodObjectType($node, SysNoteRepository::class)) {
+        if (! $this->isMethodStaticCallOrClassMethodObjectType($node, SysNoteRepository::class)) {
             return null;
         }
 
-        if (!$this->isName($node->name, 'findByPidsAndAuthor')) {
+        if (! $this->isName($node->name, 'findByPidsAndAuthor')) {
+            return null;
+        }
+
+        if (count($node->args) < 2) {
             return null;
         }
 
         $node->name = new Identifier('findByPidsAndAuthorId');
 
-        $lastArgument = array_pop($node->args);
-
-        $node->args[1] = $this->createArg($this->createMethodCall($lastArgument->value, 'getUid'));
+        $secondArgument = $node->args[1];
+        $secondArgument->value = $this->createMethodCall($secondArgument->value, 'getUid');
 
         return $node;
     }

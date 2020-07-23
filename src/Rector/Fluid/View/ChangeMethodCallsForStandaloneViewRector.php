@@ -5,11 +5,12 @@ declare(strict_types=1);
 namespace Ssch\TYPO3Rector\Rector\Fluid\View;
 
 use PhpParser\Node;
+use PhpParser\Node\Arg;
 use PhpParser\Node\Expr\MethodCall;
 use PhpParser\Node\Identifier;
-use Rector\Rector\AbstractRector;
-use Rector\RectorDefinition\CodeSample;
-use Rector\RectorDefinition\RectorDefinition;
+use Rector\Core\Rector\AbstractRector;
+use Rector\Core\RectorDefinition\CodeSample;
+use Rector\Core\RectorDefinition\RectorDefinition;
 use TYPO3\CMS\Fluid\View\StandaloneView;
 
 /**
@@ -22,9 +23,9 @@ final class ChangeMethodCallsForStandaloneViewRector extends AbstractRector
      *     oldMethod => newMethod
      * ].
      *
-     * @var string[][]|mixed[][][]
+     * @var string[][]
      */
-    private $oldToNewMethodsByClass = [
+    private const OLD_TO_NEW_METHODS_BY_CLASS = [
         StandaloneView::class => [
             'setLayoutRootPath' => 'setLayoutRootPaths',
             'getLayoutRootPath' => 'getLayoutRootPaths',
@@ -72,38 +73,36 @@ PHP
      */
     public function refactor(Node $node): ?Node
     {
-        foreach ($this->oldToNewMethodsByClass as $type => $oldToNewMethods) {
-            if (!$this->isMethodStaticCallOrClassMethodObjectType($node, $type)) {
+        foreach (self::OLD_TO_NEW_METHODS_BY_CLASS as $type => $oldToNewMethods) {
+            if (! $this->isMethodStaticCallOrClassMethodObjectType($node, $type)) {
                 continue;
             }
 
             foreach ($oldToNewMethods as $oldMethod => $newMethod) {
-                if (!$this->isName($node->name, $oldMethod)) {
+                if (! $this->isName($node->name, $oldMethod)) {
                     continue;
                 }
 
-                $methodName = $this->getName($node);
+                $methodName = $this->getName($node->name);
 
                 switch ($methodName) {
                     // Wrap the first argument into an array
                     case 'setPartialRootPath':
                     case 'setLayoutRootPath':
-                        $arguments = $node->args;
-                        $firstArgument = array_shift($arguments);
+                        $firstArgument = $node->args[0];
 
                         $node->name = new Identifier($newMethod);
-                        $node->args = [new Node\Arg(new Node\Expr\Array_([$firstArgument]))];
+
+                        $array = $this->createArray([$firstArgument->value]);
+                        $node->args = [new Arg($array)];
 
                         return $node;
-
-                        break;
                     case 'getLayoutRootPath':
                     case 'getPartialRootPath':
 
                         $node->name = new Identifier($newMethod);
 
-                        return new Node\Expr\FuncCall(new Node\Name('array_shift'), [new Node\Arg($node)]);
-                        break;
+                        return $this->createFuncCall('array_shift', [$node]);
                 }
             }
         }

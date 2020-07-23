@@ -5,10 +5,11 @@ declare(strict_types=1);
 namespace Ssch\TYPO3Rector\Rector\Core\Utility;
 
 use PhpParser\Node;
+use PhpParser\Node\Expr\BinaryOp\Plus;
 use PhpParser\Node\Expr\StaticCall;
-use Rector\Rector\AbstractRector;
-use Rector\RectorDefinition\CodeSample;
-use Rector\RectorDefinition\RectorDefinition;
+use Rector\Core\Rector\AbstractRector;
+use Rector\Core\RectorDefinition\CodeSample;
+use Rector\Core\RectorDefinition\RectorDefinition;
 use TYPO3\CMS\Core\Imaging\GraphicalFunctions;
 use TYPO3\CMS\Core\Utility\ArrayUtility;
 use TYPO3\CMS\Core\Utility\GeneralUtility;
@@ -34,24 +35,22 @@ final class RefactorRemovedMethodsFromGeneralUtilityRector extends AbstractRecto
      */
     public function refactor(Node $node): ?Node
     {
-        $classNode = $node->class;
-        $className = $this->getName($classNode);
-        $methodName = $this->getName($node);
+        if (! $this->isName($node->class, GeneralUtility::class)) {
+            return null;
+        }
 
-        if (GeneralUtility::class !== $className) {
+        $methodName = $this->getName($node->name);
+        if (null === $methodName) {
             return null;
         }
 
         switch ($methodName) {
             case 'gif_compress':
                 return $this->createStaticCall(GraphicalFunctions::class, 'gifCompress', $node->args);
-                break;
             case 'png_to_gif_by_imagemagick':
                 return $this->createStaticCall(GraphicalFunctions::class, 'pngToGifByImagemagick', $node->args);
-                break;
             case 'read_png_gif':
                 return $this->createStaticCall(GraphicalFunctions::class, 'readPngGif', $node->args);
-                break;
             case 'inArray':
             case 'removeArrayEntryByValue':
             case 'keepItemsInArray':
@@ -59,18 +58,15 @@ final class RefactorRemovedMethodsFromGeneralUtilityRector extends AbstractRecto
             case 'arrayDiffAssocRecursive':
             case 'naturalKeySortRecursive':
                 return $this->createStaticCall(ArrayUtility::class, $methodName, $node->args);
-                break;
             case 'array_merge':
                 [$arg1, $arg2] = $node->args;
 
-                return new Node\Expr\BinaryOp\Plus($arg1->value, $arg2->value);
-                break;
+                return new Plus($arg1->value, $arg2->value);
             case 'getThisUrl':
                 // TODO: This is not implemented yet. What is the correct equivalent within getIndpEnv
                 break;
             case 'cleanOutputBuffers':
                 return $this->createStaticCall(GeneralUtility::class, 'flushOutputBuffers');
-                break;
         }
 
         return null;
@@ -83,13 +79,8 @@ final class RefactorRemovedMethodsFromGeneralUtilityRector extends AbstractRecto
     {
         return new RectorDefinition('Refactor removed methods from GeneralUtility.', [
             new CodeSample(
-                <<<'PHP'
-GeneralUtility::gif_compress();
-PHP
-                ,
-                <<<'PHP'
-\TYPO3\CMS\Core\Imaging\GraphicalFunctions::gifCompress();
-PHP
+                'GeneralUtility::gif_compress();',
+                '\TYPO3\CMS\Core\Imaging\GraphicalFunctions::gifCompress();'
             ),
         ]);
     }

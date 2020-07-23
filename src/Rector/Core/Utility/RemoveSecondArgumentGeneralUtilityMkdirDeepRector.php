@@ -7,9 +7,9 @@ namespace Ssch\TYPO3Rector\Rector\Core\Utility;
 use PhpParser\Node;
 use PhpParser\Node\Expr\BinaryOp\Concat;
 use PhpParser\Node\Expr\StaticCall;
-use Rector\Rector\AbstractRector;
-use Rector\RectorDefinition\CodeSample;
-use Rector\RectorDefinition\RectorDefinition;
+use Rector\Core\Rector\AbstractRector;
+use Rector\Core\RectorDefinition\CodeSample;
+use Rector\Core\RectorDefinition\RectorDefinition;
 use TYPO3\CMS\Core\Utility\GeneralUtility;
 
 /**
@@ -18,7 +18,7 @@ use TYPO3\CMS\Core\Utility\GeneralUtility;
 final class RemoveSecondArgumentGeneralUtilityMkdirDeepRector extends AbstractRector
 {
     /**
-     * @inheritDoc
+     * @return string[]
      */
     public function getNodeTypes(): array
     {
@@ -30,11 +30,11 @@ final class RemoveSecondArgumentGeneralUtilityMkdirDeepRector extends AbstractRe
      */
     public function refactor(Node $node): ?Node
     {
-        if (!$this->isMethodStaticCallOrClassMethodObjectType($node, GeneralUtility::class)) {
+        if (! $this->isMethodStaticCallOrClassMethodObjectType($node, GeneralUtility::class)) {
             return null;
         }
 
-        if (!$this->isName($node, 'mkdir_deep')) {
+        if (! $this->isName($node->name, 'mkdir_deep')) {
             return null;
         }
 
@@ -46,12 +46,7 @@ final class RemoveSecondArgumentGeneralUtilityMkdirDeepRector extends AbstractRe
 
         $concat = new Concat($node->args[0]->value, $node->args[1]->value);
 
-        return
-            $this->createStaticCall(
-                GeneralUtility::class,
-                'mkdir_deep',
-                [$concat]
-            );
+        return $this->createStaticCall(GeneralUtility::class, 'mkdir_deep', [$concat]);
     }
 
     /**

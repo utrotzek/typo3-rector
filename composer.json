@@ -1,10 +1,19 @@
 {
     "name": "ssch/typo3-rector",
     "description": "Instant fixes for your TYPO3 code by using Rector.",
+    "license": "MIT",
     "type": "library",
+    "authors": [
+        { "name": "Sebastian Schreiber", "email": "breakpoint@schreibersebastian.de" }
+    ],
     "require": {
-        "rector/rector": "0.6.14",
+        "php": "^7.2",
+        "rector/rector": "^0.7.21",
         "typo3fluid/fluid": "^2.6"
+    },
+    "require-dev": {
+        "phpunit/phpunit": "^8.0|^9.0",
+        "symplify/easy-coding-standard": "^7.2"
     },
     "autoload": {
         "psr-4": {
@@ -13,25 +22,11 @@
     },
     "autoload-dev": {
         "psr-4": {
-            "Ssch\\TYPO3Rector\\Tests\\": "tests"
+            "Ssch\\TYPO3Rector\\Tests\\": "tests",
+            "Ssch\\TYPO3Rector\\PHPStan\\": "utils/phpstan/src"
         },
-        "classmap": [
-            "classes",
-            ".code"
-        ]
+        "classmap": [".code"]
     },
-    "require-dev": {
-        "friendsofphp/php-cs-fixer": "^2.16",
-        "phpunit/phpunit": "^7.5"
-    },
-    "license": "MIT",
-    "authors": [
-        {
-            "name": "Sebastian Schreiber",
-            "email": "breakpoint@schreibersebastian.de"
-        }
-    ],
-    "bin": ["bin/typo3_rector"],
     "minimum-stability": "dev",
     "prefer-stable": true,
     "config": {
@@ -40,13 +35,12 @@
         "sort-packages": true
     },
     "scripts": {
-        "check-style": "./vendor/bin/php-cs-fixer fix --config=./.php_cs.dist --dry-run",
-        "fix-style": "./vendor/bin/php-cs-fixer fix --config=./.php_cs.dist",
-        "analyze": "./vendor/bin/phpstan analyse src --level=4 --memory-limit=-1",
+        "check-style": "vendor/bin/ecs check --ansi",
+        "fix-style": "vendor/bin/ecs check --fix --ansi",
+        "analyze": "vendor/bin/phpstan analyse --memory-limit=-1 --ansi",
         "test": "vendor/bin/phpunit",
-        "docs": [
-            "./bin/typo3_rector generate-docs -o typo3-markdown > docs/AllRectorsOverview.md"
-        ]
+        "docs": "vendor/bin/rector dump-rectors src/Rector > docs/AllRectorsOverview.md",
+        "rector": "vendor/bin/rector rectify --dry-run --ansi"
     },
     "scripts-descriptions": {
         "docs": "Regenerate descriptions of all Rectors to docs/AllRectorsOverview.md file"

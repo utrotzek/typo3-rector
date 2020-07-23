@@ -5,10 +5,13 @@ declare(strict_types=1);
 namespace Ssch\TYPO3Rector\Rector\Core\Utility;
 
 use PhpParser\Node;
+use PhpParser\Node\Arg;
 use PhpParser\Node\Expr\Assign;
-use Rector\Rector\AbstractRector;
-use Rector\RectorDefinition\CodeSample;
-use Rector\RectorDefinition\RectorDefinition;
+use PhpParser\Node\Expr\MethodCall;
+use PhpParser\Node\Expr\StaticCall;
+use Rector\Core\Rector\AbstractRector;
+use Rector\Core\RectorDefinition\CodeSample;
+use Rector\Core\RectorDefinition\RectorDefinition;
 use TYPO3\CMS\Core\Utility\GeneralUtility;
 
 /**
@@ -17,7 +20,7 @@ use TYPO3\CMS\Core\Utility\GeneralUtility;
 final class RefactorExplodeUrl2ArrayFromGeneralUtilityRector extends AbstractRector
 {
     /**
-     * @inheritDoc
+     * @return string[]
      */
     public function getNodeTypes(): array
     {
@@ -29,29 +32,35 @@ final class RefactorExplodeUrl2ArrayFromGeneralUtilityRector extends AbstractRec
      */
     public function refactor(Node $node): ?Node
     {
-        if (!$this->isMethodStaticCallOrClassMethodObjectType($node->expr, GeneralUtility::class)) {
+        if (! $node->expr instanceof StaticCall && ! $node->expr instanceof MethodCall) {
             return null;
         }
 
-        if (!$this->isName($node->expr->name, 'explodeUrl2Array')) {
+        /** @var StaticCall|MethodCall $call */
+        $call = $node->expr;
+
+        if (! $this->isMethodStaticCallOrClassMethodObjectType($call, GeneralUtility::class)) {
             return null;
         }
 
-        $arguments = $node->expr->args;
+        if (! $this->isName($call->name, 'explodeUrl2Array')) {
+            return null;
+        }
 
+        $arguments = $call->args;
         if (count($arguments) <= 1) {
             return null;
         }
 
+        /** @var Arg $lastArgument */
         $lastArgument = array_pop($arguments);
-
         if ($this->isFalse($lastArgument->value)) {
-            $node->expr->args = $arguments;
+            $call->args = $arguments;
 
             return null;
         }
 
-        return $this->createFunction('parse_str', [$arguments[0], $node->var]);
+        return $this->createFuncCall('parse_str', [$arguments[0], $node->var]);
     }
 
     /**
@@ -59,18 +68,21 @@ final class RefactorExplodeUrl2ArrayFromGeneralUtilityRector extends AbstractRec
      */
     public function getDefinition(): RectorDefinition
     {
-        return new RectorDefinition('Remove second argument of GeneralUtility::explodeUrl2Array if it is false or just use function parse_str if it is true', [
-            new CodeSample(
-                <<<'PHP'
+        return new RectorDefinition(
+            'Remove second argument of GeneralUtility::explodeUrl2Array if it is false or just use function parse_str if it is true',
+            [
+                new CodeSample(
+                    <<<'PHP'
 $variable = GeneralUtility::explodeUrl2Array('https://www.domain.com', true);
 $variable2 = GeneralUtility::explodeUrl2Array('https://www.domain.com', false);
 PHP
-                ,
-                <<<'PHP'
+                    ,
+                    <<<'PHP'
 parse_str('https://www.domain.com', $variable);
 $variable2 = GeneralUtility::explodeUrl2Array('https://www.domain.com');
 PHP
-            ),
-        ]);
+                ),
+            ]
+        );
     }
 }

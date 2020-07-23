@@ -7,9 +7,9 @@ namespace Ssch\TYPO3Rector\Rector\Core\Utility;
 use PhpParser\Node;
 use PhpParser\Node\Expr\MethodCall;
 use PhpParser\Node\Expr\StaticCall;
-use Rector\Rector\AbstractRector;
-use Rector\RectorDefinition\CodeSample;
-use Rector\RectorDefinition\RectorDefinition;
+use Rector\Core\Rector\AbstractRector;
+use Rector\Core\RectorDefinition\CodeSample;
+use Rector\Core\RectorDefinition\RectorDefinition;
 use TYPO3\CMS\Core\Core\CacheManager;
 use TYPO3\CMS\Core\Utility\ExtensionManagementUtility;
 use TYPO3\CMS\Core\Utility\GeneralUtility;
@@ -21,7 +21,7 @@ use TYPO3\CMS\Core\Utility\PathUtility;
 final class RefactorMethodsFromExtensionManagementUtilityRector extends AbstractRector
 {
     /**
-     * @inheritDoc
+     * @return string[]
      */
     public function getNodeTypes(): array
     {
@@ -33,9 +33,8 @@ final class RefactorMethodsFromExtensionManagementUtilityRector extends Abstract
      */
     public function refactor(Node $node): ?Node
     {
-        $classNode = $node->class;
-        $className = $this->getName($classNode);
-        $methodName = $this->getName($node);
+        $className = $this->getName($node->class);
+        $methodName = $this->getName($node->name);
 
         if (ExtensionManagementUtility::class !== $className) {
             return null;
@@ -44,13 +43,10 @@ final class RefactorMethodsFromExtensionManagementUtilityRector extends Abstract
         switch ($methodName) {
             case 'isLoaded':
                 return $this->removeSecondArgumentFromMethodIsLoaded($node);
-                break;
             case 'siteRelPath':
                 return $this->createNewMethodCallForSiteRelPath($node);
-                break;
             case 'removeCacheFiles':
                 return $this->createNewMethodCallForRemoveCacheFiles();
-                break;
         }
 
         return null;
@@ -78,7 +74,11 @@ PHP
     {
         $firstArgument = $node->args[0];
 
-        return $this->createStaticCall(PathUtility::class, 'stripPathSitePrefix', [$this->createStaticCall(ExtensionManagementUtility::class, 'extPath', [$firstArgument])]);
+        return $this->createStaticCall(
+            PathUtility::class,
+            'stripPathSitePrefix',
+            [$this->createStaticCall(ExtensionManagementUtility::class, 'extPath', [$firstArgument])]
+        );
     }
 
     private function createNewMethodCallForRemoveCacheFiles(): MethodCall
@@ -86,9 +86,7 @@ PHP
         return $this->createMethodCall($this->createStaticCall(
             GeneralUtility::class,
             'makeInstance',
-            [
-                $this->createClassConstant(CacheManager::class, 'class'),
-            ]
+            [$this->createClassConstant(CacheManager::class, 'class')]
         ), 'flushCachesInGroup', [$this->createArg('system')]);
     }
 

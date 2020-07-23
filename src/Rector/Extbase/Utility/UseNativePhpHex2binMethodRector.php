@@ -6,9 +6,9 @@ namespace Ssch\TYPO3Rector\Rector\Extbase\Utility;
 
 use PhpParser\Node;
 use PhpParser\Node\Expr\StaticCall;
-use Rector\Rector\AbstractRector;
-use Rector\RectorDefinition\CodeSample;
-use Rector\RectorDefinition\RectorDefinition;
+use Rector\Core\Rector\AbstractRector;
+use Rector\Core\RectorDefinition\CodeSample;
+use Rector\Core\RectorDefinition\RectorDefinition;
 use TYPO3\CMS\Extbase\Utility\TypeHandlingUtility;
 
 /**
@@ -17,7 +17,7 @@ use TYPO3\CMS\Extbase\Utility\TypeHandlingUtility;
 final class UseNativePhpHex2binMethodRector extends AbstractRector
 {
     /**
-     * @inheritDoc
+     * @return string[]
      */
     public function getNodeTypes(): array
     {
@@ -29,15 +29,15 @@ final class UseNativePhpHex2binMethodRector extends AbstractRector
      */
     public function refactor(Node $node): ?Node
     {
-        if (!$this->isMethodStaticCallOrClassMethodObjectType($node, TypeHandlingUtility::class)) {
+        if (! $this->isMethodStaticCallOrClassMethodObjectType($node, TypeHandlingUtility::class)) {
             return null;
         }
 
-        if (!$this->isName($node->name, 'hex2bin')) {
+        if (! $this->isName($node->name, 'hex2bin')) {
             return null;
         }
 
-        return $this->createFunction('hex2bin', $node->args);
+        return $this->createFuncCall('hex2bin', $node->args);
     }
 
     /**

@@ -1,5 +1,7 @@
 <?php
 
+declare(strict_types=1);
+
 namespace Ssch\TYPO3Rector\Tests\Rector\Core\Environment;
 
 use Iterator;
@@ -7,12 +9,10 @@ use Ssch\TYPO3Rector\Rector\Core\Environment\ConstantToEnvironmentCallRector;
 use Ssch\TYPO3Rector\Rector\Core\Environment\RenameMethodCallToEnvironmentMethodCallRector;
 use Ssch\TYPO3Rector\Tests\AbstractRectorWithConfigTestCase;
 
-class EnvironmentApiTest extends AbstractRectorWithConfigTestCase
+final class EnvironmentApiTest extends AbstractRectorWithConfigTestCase
 {
     /**
      * @dataProvider provideDataForTest()
-     *
-     * @param string $file
      */
     public function test(string $file): void
     {
@@ -21,7 +21,7 @@ class EnvironmentApiTest extends AbstractRectorWithConfigTestCase
 
     public function provideDataForTest(): Iterator
     {
-        yield [__DIR__ . '/Fixture/environment_constants.php.inc'];
+        return $this->yieldFilesFromDirectory(__DIR__ . '/Fixture');
     }
 
     protected function getRectorsWithConfiguration(): array

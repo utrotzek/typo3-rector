@@ -1,16 +1,16 @@
 <?php
 
-namespace Ssch\TYPO3Rector\Tests\Migrations;
+declare(strict_types=1);
+
+namespace Ssch\TYPO3Rector\Tests\Rector\Migrations;
 
 use Iterator;
 use Ssch\TYPO3Rector\Tests\AbstractRectorWithConfigTestCase;
 
-class RenameClassMapAliasRectorTest extends AbstractRectorWithConfigTestCase
+final class RenameClassMapAliasRectorTest extends AbstractRectorWithConfigTestCase
 {
     /**
      * @dataProvider provideDataForTest()
-     *
-     * @param string $file
      */
     public function test(string $file): void
     {
@@ -19,6 +19,6 @@ class RenameClassMapAliasRectorTest extends AbstractRectorWithConfigTestCase
 
     public function provideDataForTest(): Iterator
     {
-        yield [__DIR__ . '/Fixture/fluid_core_classes.php.inc'];
+        return $this->yieldFilesFromDirectory(__DIR__ . '/Fixture');
     }
 }

@@ -6,9 +6,9 @@ namespace Ssch\TYPO3Rector\Rector\Backend\Utility;
 
 use PhpParser\Node;
 use PhpParser\Node\Expr\StaticCall;
-use Rector\Rector\AbstractRector;
-use Rector\RectorDefinition\CodeSample;
-use Rector\RectorDefinition\RectorDefinition;
+use Rector\Core\Rector\AbstractRector;
+use Rector\Core\RectorDefinition\CodeSample;
+use Rector\Core\RectorDefinition\RectorDefinition;
 use TYPO3\CMS\Backend\Utility\BackendUtility;
 use TYPO3\CMS\Core\Information\Typo3Information;
 use TYPO3\CMS\Core\Utility\GeneralUtility;
@@ -19,7 +19,7 @@ use TYPO3\CMS\Core\Utility\GeneralUtility;
 final class UseTypo3InformationForCopyRightNoticeRector extends AbstractRector
 {
     /**
-     * @inheritDoc
+     * @return string[]
      */
     public function getNodeTypes(): array
     {
@@ -27,23 +27,23 @@ final class UseTypo3InformationForCopyRightNoticeRector extends AbstractRector
     }
 
     /**
-     * @var Node|StaticCall
-     *
-     * @return Node
+     * @param StaticCall $node
      */
     public function refactor(Node $node): ?Node
     {
-        if (!$this->isMethodStaticCallOrClassMethodObjectType($node, BackendUtility::class)) {
+        if (! $this->isMethodStaticCallOrClassMethodObjectType($node, BackendUtility::class)) {
             return null;
         }
 
-        if (!$this->isName($node->name, 'TYPO3_copyRightNotice')) {
+        if (! $this->isName($node->name, 'TYPO3_copyRightNotice')) {
             return null;
         }
 
-        return $this->createMethodCall($this->createStaticCall(GeneralUtility::class, 'makeInstance', [
+        $staticCall = $this->createStaticCall(GeneralUtility::class, 'makeInstance', [
             $this->createClassConstant(Typo3Information::class, 'class'),
-        ]), 'getCopyrightNotice', []);
+        ]);
+
+        return $this->createMethodCall($staticCall, 'getCopyrightNotice');
     }
 
     /**
@@ -51,14 +51,19 @@ final class UseTypo3InformationForCopyRightNoticeRector extends AbstractRector
      */
     public function getDefinition(): RectorDefinition
     {
-        return new RectorDefinition('Migrate the method BackendUtility::TYPO3_copyRightNotice() to use Typo3Information API', [
-            new CodeSample(<<<'PHP'
+        return new RectorDefinition(
+            'Migrate the method BackendUtility::TYPO3_copyRightNotice() to use Typo3Information API',
+            [
+                new CodeSample(
+                    <<<'PHP'
 $copyright = BackendUtility::TYPO3_copyRightNotice();
 PHP
-                , <<<'PHP'
+                    ,
+                    <<<'PHP'
 $copyright = GeneralUtility::makeInstance(Typo3Information::class)->getCopyrightNotice();
 PHP
-            ),
-        ]);
+                ),
+            ]
+        );
     }
 }

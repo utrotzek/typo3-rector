@@ -1,16 +1,16 @@
 <?php
 
+declare(strict_types=1);
+
 namespace Ssch\TYPO3Rector\Tests\Rector\Core\Utility;
 
 use Iterator;
 use Ssch\TYPO3Rector\Tests\AbstractRectorWithConfigTestCase;
 
-class RefactorExplodeUrl2ArrayFromGeneralUtilityRectorTest extends AbstractRectorWithConfigTestCase
+final class RefactorExplodeUrl2ArrayFromGeneralUtilityRectorTest extends AbstractRectorWithConfigTestCase
 {
     /**
      * @dataProvider provideDataForTest()
-     *
-     * @param string $file
      */
     public function test(string $file): void
     {

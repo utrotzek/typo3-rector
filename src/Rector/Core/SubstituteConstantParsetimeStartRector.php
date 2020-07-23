@@ -11,9 +11,9 @@ use PhpParser\Node\Expr\BinaryOp\Mul;
 use PhpParser\Node\Expr\Variable;
 use PhpParser\Node\Scalar\LNumber;
 use PhpParser\Node\Scalar\String_;
-use Rector\Rector\AbstractRector;
-use Rector\RectorDefinition\CodeSample;
-use Rector\RectorDefinition\RectorDefinition;
+use Rector\Core\Rector\AbstractRector;
+use Rector\Core\RectorDefinition\CodeSample;
+use Rector\Core\RectorDefinition\RectorDefinition;
 use Ssch\TYPO3Rector\Helper\Typo3NodeResolver;
 
 /**
@@ -32,7 +32,7 @@ final class SubstituteConstantParsetimeStartRector extends AbstractRector
     }
 
     /**
-     * @inheritDoc
+     * @return string[]
      */
     public function getNodeTypes(): array
     {
@@ -40,20 +40,17 @@ final class SubstituteConstantParsetimeStartRector extends AbstractRector
     }
 
     /**
-     * @inheritDoc
+     * @param Expr $node
      */
     public function refactor(Node $node): ?Node
     {
-        if (!$this->typo3NodeResolver->isTypo3Global($node, Typo3NodeResolver::ParsetimeStart)) {
+        if (! $this->typo3NodeResolver->isTypo3Global($node, Typo3NodeResolver::PARSETIME_START)) {
             return null;
         }
 
-        return $this->createFunction('round', [
+        return $this->createFuncCall('round', [
             new Mul(new ArrayDimFetch(
-                new ArrayDimFetch(
-                    new Variable('GLOBALS'),
-                    new String_('TYPO3_MISC')
-                ),
+                new ArrayDimFetch(new Variable('GLOBALS'), new String_('TYPO3_MISC')),
                 new String_('microtime_start')
             ), new LNumber(1000)),
         ]);
@@ -64,16 +61,19 @@ final class SubstituteConstantParsetimeStartRector extends AbstractRector
      */
     public function getDefinition(): RectorDefinition
     {
-        return new RectorDefinition('Substitute $GLOBALS[\'PARSETIME_START\'] with round($GLOBALS[\'TYPO3_MISC\'][\'microtime_start\'] * 1000)', [
-            new CodeSample(
-                <<<'PHP'
+        return new RectorDefinition(
+            'Substitute $GLOBALS[\'PARSETIME_START\'] with round($GLOBALS[\'TYPO3_MISC\'][\'microtime_start\'] * 1000)',
+            [
+                new CodeSample(
+                    <<<'PHP'
 $parseTime = $GLOBALS['PARSETIME_START'];
 PHP
-                ,
-                <<<'PHP'
+                    ,
+                    <<<'PHP'
 $parseTime = round($GLOBALS['TYPO3_MISC']['microtime_start'] * 1000);
 PHP
-            ),
-        ]);
+                ),
+            ]
+        );
     }
 }

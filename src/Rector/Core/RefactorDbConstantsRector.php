@@ -9,16 +9,19 @@ use PhpParser\Node\Expr\ArrayDimFetch;
 use PhpParser\Node\Expr\ConstFetch;
 use PhpParser\Node\Expr\Variable;
 use PhpParser\Node\Scalar\String_;
-use Rector\Rector\AbstractRector;
-use Rector\RectorDefinition\CodeSample;
-use Rector\RectorDefinition\RectorDefinition;
+use Rector\Core\Rector\AbstractRector;
+use Rector\Core\RectorDefinition\CodeSample;
+use Rector\Core\RectorDefinition\RectorDefinition;
 
 /**
  * @see https://docs.typo3.org/c/typo3/cms-core/master/en-us/Changelog/8.1/Breaking-75454-TYPO3_dbConstantsRemoved.html
  */
 final class RefactorDbConstantsRector extends AbstractRector
 {
-    private static $mapConstantsToGlobals = [
+    /**
+     * @var string[]
+     */
+    private const MAP_CONSTANTS_TO_GLOBALS = [
         'TYPO3_db' => 'dbname',
         'TYPO3_db_username' => 'user',
         'TYPO3_db_password' => 'password',
@@ -26,7 +29,7 @@ final class RefactorDbConstantsRector extends AbstractRector
     ];
 
     /**
-     * @inheritDoc
+     * @return string[]
      */
     public function getNodeTypes(): array
     {
@@ -34,30 +37,33 @@ final class RefactorDbConstantsRector extends AbstractRector
     }
 
     /**
-     * @inheritDoc
+     * @param ConstFetch $node
      */
     public function refactor(Node $node): ?Node
     {
         $constantsName = $this->getName($node);
-
-        if (!array_key_exists($constantsName, self::$mapConstantsToGlobals)) {
+        if (null === $constantsName) {
             return null;
         }
 
-        $globalKey = self::$mapConstantsToGlobals[$constantsName];
+        if (! array_key_exists($constantsName, self::MAP_CONSTANTS_TO_GLOBALS)) {
+            return null;
+        }
+
+        $globalKey = self::MAP_CONSTANTS_TO_GLOBALS[$constantsName];
 
         return new ArrayDimFetch(
             new ArrayDimFetch(
                 new ArrayDimFetch(
                     new ArrayDimFetch(
-                        new ArrayDimFetch(
-                            new Variable('GLOBALS'),
-                            new String_('TYPO3_CONF_VARS')
-                        ),
+                        new ArrayDimFetch(new Variable('GLOBALS'), new String_('TYPO3_CONF_VARS')),
                         new String_('DB')
-                    ), new String_('Connections')
-                ), new String_('Default')
-            ), new String_($globalKey)
+                    ),
+                    new String_('Connections')
+                ),
+                new String_('Default')
+            ),
+            new String_($globalKey)
         );
     }
 

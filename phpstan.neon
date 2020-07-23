@@ -1,20 +1,29 @@
 parameters:
-    inferPrivatePropertyTypeFromConstructor: true
+    level: 8
+
+    paths:
+        - src
+        - tests
+
     bootstrap: tests/bootstrap.php
+    inferPrivatePropertyTypeFromConstructor: true
+    checkMissingIterableValueType: false
+
     ignoreErrors:
         - '#Access to an undefined property#'
         - '#Unreachable statement - code above always terminates#'
+        - '#Parameter \#2 \$stmt of method Rector\\Core\\PhpParser\\Node\\Manipulator\\ClassInsertManipulator::addAsFirstMethod\(\) expects PhpParser\\Node\\Stmt\\ClassConst\|PhpParser\\Node\\Stmt\\ClassMethod\|PhpParser\\Node\\Stmt\\Property, PhpParser\\Node\\Stmt\\Nop given#'
 
 services:
     -
-        class: Ssch\TYPO3Rector\PhpStan\Rules\AddSeeDocBlockForRectorClass
+        class: Ssch\TYPO3Rector\PHPStan\Rules\AddSeeDocBlockForRectorClass
         tags:
             - phpstan.rules.rule
     -
-        class: Ssch\TYPO3Rector\PhpStan\Type\GeneralUtilityDynamicReturnTypeExtension
+        class: Ssch\TYPO3Rector\PHPStan\Type\GeneralUtilityDynamicReturnTypeExtension
         tags:
             - phpstan.broker.dynamicStaticMethodReturnTypeExtension
     -
-        class: Ssch\TYPO3Rector\PhpStan\Type\ObjectManagerDynamicReturnTypeExtension
+        class: Ssch\TYPO3Rector\PHPStan\Type\ObjectManagerDynamicReturnTypeExtension
         tags:
             - phpstan.broker.dynamicMethodReturnTypeExtension

@@ -6,9 +6,9 @@ namespace Ssch\TYPO3Rector\Rector\Extbase;
 
 use PhpParser\Node;
 use PhpParser\Node\Expr\StaticCall;
-use Rector\Rector\AbstractRector;
-use Rector\RectorDefinition\CodeSample;
-use Rector\RectorDefinition\RectorDefinition;
+use Rector\Core\Rector\AbstractRector;
+use Rector\Core\RectorDefinition\CodeSample;
+use Rector\Core\RectorDefinition\RectorDefinition;
 use TYPO3\CMS\Extbase\Utility\ExtensionUtility;
 
 /**
@@ -17,7 +17,7 @@ use TYPO3\CMS\Extbase\Utility\ExtensionUtility;
 final class RegisterPluginWithVendorNameRector extends AbstractRector
 {
     /**
-     * @inheritDoc
+     * @return string[]
      */
     public function getNodeTypes(): array
     {
@@ -29,11 +29,11 @@ final class RegisterPluginWithVendorNameRector extends AbstractRector
      */
     public function refactor(Node $node): ?Node
     {
-        if (!$this->isMethodStaticCallOrClassMethodObjectType($node, ExtensionUtility::class)) {
+        if (! $this->isMethodStaticCallOrClassMethodObjectType($node, ExtensionUtility::class)) {
             return null;
         }
 
-        if (!$this->isName($node, 'registerPlugin')) {
+        if (! $this->isName($node->name, 'registerPlugin')) {
             return null;
         }
 
@@ -76,12 +76,9 @@ CODE_SAMPLE
      */
     private function removeVendorNameIfNeeded(Node $node): ?Node
     {
-        $arguments = $node->args;
-        $firstArgument = array_shift($arguments);
-        $extensionName = $this->getValue($firstArgument->value);
+        $extensionName = $this->getValue($node->args[0]->value);
 
         $delimiterPosition = strrpos($extensionName, '.');
-
         if (false === $delimiterPosition) {
             return null;
         }

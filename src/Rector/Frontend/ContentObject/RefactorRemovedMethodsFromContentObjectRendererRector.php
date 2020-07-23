@@ -6,9 +6,10 @@ namespace Ssch\TYPO3Rector\Rector\Frontend\ContentObject;
 
 use PhpParser\Node;
 use PhpParser\Node\Expr\MethodCall;
-use Rector\Rector\AbstractRector;
-use Rector\RectorDefinition\CodeSample;
-use Rector\RectorDefinition\RectorDefinition;
+use PHPStan\Type\TypeWithClassName;
+use Rector\Core\Rector\AbstractRector;
+use Rector\Core\RectorDefinition\CodeSample;
+use Rector\Core\RectorDefinition\RectorDefinition;
 use Ssch\TYPO3Rector\Helper\Typo3NodeResolver;
 use TYPO3\CMS\Frontend\ContentObject\ContentObjectRenderer;
 
@@ -18,9 +19,9 @@ use TYPO3\CMS\Frontend\ContentObject\ContentObjectRenderer;
 final class RefactorRemovedMethodsFromContentObjectRendererRector extends AbstractRector
 {
     /**
-     * @var array
+     * @var string[]
      */
-    private $methodsToRefactor = [
+    private const METHODS_TO_REFACTOR = [
         'FLOWPLAYER',
         'TEXT',
         'CLEARGIF',
@@ -49,6 +50,7 @@ final class RefactorRemovedMethodsFromContentObjectRendererRector extends Abstra
         'SWFOBJECT',
         'QTOBJECT',
     ];
+
     /**
      * @var Typo3NodeResolver
      */
@@ -60,7 +62,7 @@ final class RefactorRemovedMethodsFromContentObjectRendererRector extends Abstra
     }
 
     /**
-     * @inheritDoc
+     * @return string[]
      */
     public function getNodeTypes(): array
     {
@@ -72,20 +74,18 @@ final class RefactorRemovedMethodsFromContentObjectRendererRector extends Abstra
      */
     public function refactor(Node $node): ?Node
     {
-        if (!$this->isMethodStaticCallOrClassMethodObjectType($node, ContentObjectRenderer::class) && !$this->typo3NodeResolver->isMethodCallOnPropertyOfGlobals($node, Typo3NodeResolver::TypoScriptFrontendController, 'cObj')) {
+        if ($this->shouldSkip($node)) {
             return null;
         }
 
-        $methodName = $this->getName($node);
-
-        if (!in_array($methodName, $this->methodsToRefactor, true)) {
+        $methodName = $this->getName($node->name);
+        if (! in_array($methodName, self::METHODS_TO_REFACTOR, true)) {
             return null;
         }
 
-        return $this->createMethodCall($node->var, 'cObjGetSingle', [
-            $this->createArg($methodName),
-            array_shift($node->args),
-        ]);
+        $args = [$this->createArg($methodName), array_shift($node->args)];
+
+        return $this->createMethodCall($node->var, 'cObjGetSingle', $args);
     }
 
     /**
@@ -104,5 +104,18 @@ $cObj->cObjGetSingle('RECORDS', ['tables' => 'tt_content', 'source' => '1,2,3'])
 PHP
             ),
         ]);
+    }
+
+    private function shouldSkip(MethodCall $methodCall): bool
+    {
+        $staticType = $this->getStaticType($methodCall->var);
+        if ($staticType instanceof TypeWithClassName && ContentObjectRenderer::class === $staticType->getClassName()) {
+            return false;
+        }
+        return ! $this->typo3NodeResolver->isMethodCallOnPropertyOfGlobals(
+            $methodCall,
+            Typo3NodeResolver::TYPO_SCRIPT_FRONTEND_CONTROLLER,
+            'cObj'
+        );
     }
 }

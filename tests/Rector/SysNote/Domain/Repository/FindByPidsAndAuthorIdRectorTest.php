@@ -1,16 +1,16 @@
 <?php
 
+declare(strict_types=1);
+
 namespace Ssch\TYPO3Rector\Tests\Rector\SysNote\Domain\Repository;
 
 use Iterator;
 use Ssch\TYPO3Rector\Tests\AbstractRectorWithConfigTestCase;
 
-class FindByPidsAndAuthorIdRectorTest extends AbstractRectorWithConfigTestCase
+final class FindByPidsAndAuthorIdRectorTest extends AbstractRectorWithConfigTestCase
 {
     /**
      * @dataProvider provideDataForTest()
-     *
-     * @param string $file
      */
     public function test(string $file): void
     {
@@ -19,6 +19,6 @@ class FindByPidsAndAuthorIdRectorTest extends AbstractRectorWithConfigTestCase
 
     public function provideDataForTest(): Iterator
     {
-        yield [__DIR__ . '/Fixture/sys_repository_find_by_pids_and_author.php.inc'];
+        return $this->yieldFilesFromDirectory(__DIR__ . '/Fixture');
     }
 }

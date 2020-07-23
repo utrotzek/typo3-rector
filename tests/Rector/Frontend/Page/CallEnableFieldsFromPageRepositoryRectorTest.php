@@ -1,16 +1,16 @@
 <?php
 
+declare(strict_types=1);
+
 namespace Ssch\TYPO3Rector\Tests\Rector\Frontend\Page;
 
 use Iterator;
 use Ssch\TYPO3Rector\Tests\AbstractRectorWithConfigTestCase;
 
-class CallEnableFieldsFromPageRepositoryRectorTest extends AbstractRectorWithConfigTestCase
+final class CallEnableFieldsFromPageRepositoryRectorTest extends AbstractRectorWithConfigTestCase
 {
     /**
      * @dataProvider provideDataForTest()
-     *
-     * @param string $file
      */
     public function test(string $file): void
     {

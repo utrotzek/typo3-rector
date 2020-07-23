@@ -1,16 +1,16 @@
 <?php
 
+declare(strict_types=1);
+
 namespace Ssch\TYPO3Rector\Tests\Rector\Core\Package;
 
 use Iterator;
 use Ssch\TYPO3Rector\Tests\AbstractRectorWithConfigTestCase;
 
-class UsePackageManagerActivePackagesRectorTest extends AbstractRectorWithConfigTestCase
+final class UsePackageManagerActivePackagesRectorTest extends AbstractRectorWithConfigTestCase
 {
     /**
      * @dataProvider provideDataForTest()
-     *
-     * @param string $file
      */
     public function test(string $file): void
     {
@@ -19,6 +19,6 @@ class UsePackageManagerActivePackagesRectorTest extends AbstractRectorWithConfig
 
     public function provideDataForTest(): Iterator
     {
-        yield [__DIR__ . '/Fixture/package_manager_active_packages.php.inc'];
+        return $this->yieldFilesFromDirectory(__DIR__ . '/Fixture');
     }
 }

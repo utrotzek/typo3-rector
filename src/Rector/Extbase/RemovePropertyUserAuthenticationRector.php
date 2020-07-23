@@ -6,9 +6,9 @@ namespace Ssch\TYPO3Rector\Rector\Extbase;
 
 use PhpParser\Node;
 use PhpParser\Node\Expr\PropertyFetch;
-use Rector\Rector\AbstractRector;
-use Rector\RectorDefinition\CodeSample;
-use Rector\RectorDefinition\RectorDefinition;
+use Rector\Core\Rector\AbstractRector;
+use Rector\Core\RectorDefinition\CodeSample;
+use Rector\Core\RectorDefinition\RectorDefinition;
 use TYPO3\CMS\Extbase\Mvc\Controller\CommandController;
 
 /**
@@ -29,18 +29,15 @@ final class RemovePropertyUserAuthenticationRector extends AbstractRector
      */
     public function refactor(Node $node): ?Node
     {
-        if (!$this->isName($node, 'userAuthentication')) {
+        if (! $this->isName($node, 'userAuthentication')) {
             return $node;
         }
 
-        if (!$this->isObjectType($node->var, CommandController::class)) {
+        if (! $this->isObjectType($node->var, CommandController::class)) {
             return $node;
         }
 
-        return $this->createMethodCall(
-            $node->var,
-            'getBackendUserAuthentication'
-        );
+        return $this->createMethodCall($node->var, 'getBackendUserAuthentication');
     }
 
     /**
@@ -48,9 +45,11 @@ final class RemovePropertyUserAuthenticationRector extends AbstractRector
      */
     public function getDefinition(): RectorDefinition
     {
-        return new RectorDefinition('Use method getBackendUserAuthentication instead of removed property $userAuthentication', [
-            new CodeSample(
-                <<<'PHP'
+        return new RectorDefinition(
+            'Use method getBackendUserAuthentication instead of removed property $userAuthentication',
+            [
+                new CodeSample(
+                    <<<'PHP'
 class MyCommandController extends CommandController
 {
     public function myMethod()
@@ -61,8 +60,8 @@ class MyCommandController extends CommandController
     }
 }
 PHP
-                ,
-                <<<'PHP'
+                    ,
+                    <<<'PHP'
 class MyCommandController extends CommandController
 {
     public function myMethod()
@@ -73,7 +72,8 @@ class MyCommandController extends CommandController
     }
 }
 PHP
-            ),
-        ]);
+                ),
+            ]
+        );
     }
 }

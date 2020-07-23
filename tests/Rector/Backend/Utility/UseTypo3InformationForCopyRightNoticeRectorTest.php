@@ -1,5 +1,7 @@
 <?php
 
+declare(strict_types=1);
+
 namespace Ssch\TYPO3Rector\Tests\Rector\Backend\Utility;
 
 use Iterator;
@@ -9,8 +11,6 @@ final class UseTypo3InformationForCopyRightNoticeRectorTest extends AbstractRect
 {
     /**
      * @dataProvider provideDataForTest()
-     *
-     * @param string $file
      */
     public function test(string $file): void
     {
